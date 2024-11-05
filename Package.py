@@ -1,5 +1,6 @@
 #Contains all relevant data for delivery. Destination Vertex attribute
-# references a vertex in the DeliveryGraph
+# references a vertex in the DeliveryGraph.
+# status attribute is 'delivered', 'hold', or 'ready'
 class Package:
     def __init__(self, id, address, city, state, zip_code, deadline, weight, status="ready", assigned_truck = None):
         self.id = id
