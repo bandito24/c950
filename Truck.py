@@ -1,5 +1,6 @@
 from datetime import time, datetime, timedelta
 
+# packages attribute utilizes result from main.py generate_next_deliveries()
 class Truck:
     average_mph = 18
     
@@ -12,7 +13,7 @@ class Truck:
         
     def add_delivery_packages(self, packages):
         self.packages.extend(packages)    
-        
+# Implements simple logging to report delivery status/time and updates the package reference to 'delivered'         
     def depart(self, time):
         self.departure_time = time
         return_distance = self.packages.pop()

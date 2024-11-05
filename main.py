@@ -4,8 +4,9 @@ from Package import Package, PackageList
 from Truck import Truck
 from datetime import time
 
+# Extracting the distances from the table and creating location
+# vertexes from the distances to be used in graph edge weights for packages
 df_distances = pd.read_excel("./distance_table.xlsx")
-
 csv_distances = df_distances.values.tolist()[6:]
 hubs = csv_distances[0][2:]
 destinations = [i.split('\n')[1].strip() for i in hubs]
@@ -31,12 +32,9 @@ for i in range(1, len(csv_distances)):
         distance = row[j]
         delivery_graph.add_undirected_edge(origin_vertex, destination_vertex, distance)
         j += 1
-
+#Extracting the package orders from the spreadsheet and creating
+#Package instances with them, assigning each with a location vertex attribute and adding to Package List
 df_orders = pd.read_excel("./package_table.xlsx")
-
-truck1 = Truck('truck1')
-truck2 = Truck('truck2')
-truck3 = Truck('truck3')
 
 csv_packages = df_orders.values.tolist()[7:]
 orders = PackageList()
@@ -49,10 +47,14 @@ for package in csv_packages:
     orders.add_package(order)
     
     
-
+truck1 = Truck('truck1')
+truck2 = Truck('truck2')
+truck3 = Truck('truck3')
 
 delivery_hub = delivery_graph.vertex_dict['4001 South 700 East,']
 
+#Function for finding next appropriate delivery location based on
+#Priority and closest next location
 def generate_next_deliveries():
     priorities = orders.list_ready_priorities()
     first_deliveries = delivery_graph.nearest_neighbor_route(delivery_hub, priorities)
@@ -64,8 +66,6 @@ def generate_next_deliveries():
     second_deliveries = delivery_graph.nearest_neighbor_route(last_endpoint, non_priorities)    
     deliveries = first_deliveries + second_deliveries
     
-        
-    # deliveries = deliveries[:16]
     unique_locations = {}
     for delivery in deliveries:
         if delivery.address in unique_locations:
@@ -87,15 +87,16 @@ def generate_next_deliveries():
     deliveries.append(return_distance)
     return deliveries
 
-
+#Sending trucks out with first ready packages at 8AM
 first_deliveries = generate_next_deliveries()
 truck1.add_delivery_packages(first_deliveries)
 truck1_return_time = truck1.depart(time(8, 0))
 
+#All but 1 package is now ready for delivery
 orders.set_all_ready()
 orders.edit_package(9, status='hold')
 
-
+#Sending next truck out at 9:05
 second_deliveries = generate_next_deliveries()
 truck2.add_delivery_packages(second_deliveries)
 truck2.depart(time(9, 5))
@@ -103,8 +104,8 @@ truck2.depart(time(9, 5))
 corrected_location = delivery_graph.vertex_dict['410 S State St']
 orders.edit_package(9, destination_vertex=corrected_location, address='410 S State St', city='Salt Lake City', zip_code='84111', state='UT', status='ready')
 
+# Sending last truck out with all remaining packages only after truck1 returns
 third_deliveries = generate_next_deliveries()
-
 truck3.add_delivery_packages(third_deliveries)
 truck3.depart(truck1_return_time)
 

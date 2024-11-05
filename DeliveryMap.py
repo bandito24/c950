@@ -1,9 +1,11 @@
 from collections import namedtuple
 
+# Holds delivery locations
 class DeliveryVertex:
     def __init__(self, address_label):
         self.address_label = address_label
-        
+
+# Main organizational structure for finding nearest neighbor based on edge weights        
 class DeliveryGraph:
     def __init__(self):
         self.adjacency_list = {}
@@ -28,6 +30,7 @@ class DeliveryGraph:
                 return vertex
         raise ValueError(f"Vertex with address label '{address_label}' not found.")
     
+    # Main algorithm for deciding the best route based on package list passed in. Will not exceed 16 unless specified
     def nearest_neighbor_route(self, start_vertex, package_list, k=16):
         Delivery = namedtuple('Delivery', ['package', 'distance', 'address'])
         visited = set()
@@ -72,56 +75,4 @@ class DeliveryGraph:
         
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
-        # while current_vertex and (k is None or len(route) < k):
-        #     visited.add(current_vertex)
-        #     neighbors = self.adjacency_list[current_vertex]
-        #     if not neighbors:
-        #         break  # No more neighbors to visit
-
-        #     # Find the nearest neighbor
-        #     next_vertex = None
-        #     min_distance = float('inf')
-
-        #     for neighbor in neighbors:
-        #         if neighbor not in visited:
-        #             distance = self.edge_weights.get((current_vertex, neighbor), float('inf'))
-        #             if distance < min_distance:
-        #                 min_distance = distance
-        #                 next_vertex = neighbor
-            
-        #     if next_vertex is None:
-        #         break  # No unvisited neighbors left
-
-        #     route.append(next_vertex.address_label)
-        #     current_vertex = next_vertex
-
-        # return route
-        
-
-
+    

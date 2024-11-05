@@ -1,3 +1,5 @@
+#Contains all relevant data for delivery. Destination Vertex attribute
+# references a vertex in the DeliveryGraph
 class Package:
     def __init__(self, id, address, city, state, zip_code, deadline, weight, status="ready", assigned_truck = None):
         self.id = id
@@ -17,7 +19,8 @@ class Package:
         if other.deadline == 'EOD':
             return False
         return self.deadline < other.deadline
-
+#Adds a package to priority list if the deadline is not 'EOD'. Priority list will
+#always be the first destinations in delivery unless there are no ready packages here
 class PackageList:
     def __init__(self):
         self.index = 0
