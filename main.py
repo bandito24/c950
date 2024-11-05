@@ -1,3 +1,7 @@
+# Author: Charles Mudd
+# Student ID: 011313966
+# Title: C950 WGUPS ROUTING PROGRAM
+
 import pandas as pd
 from DeliveryMap import DeliveryGraph, DeliveryVertex
 from Package import Package, PackageList
