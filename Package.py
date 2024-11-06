@@ -1,8 +1,10 @@
+from HashMap import HashMap
+
 #Contains all relevant data for delivery. Destination Vertex attribute
 # references a vertex in the DeliveryGraph.
 # status attribute is 'delivered', 'hold', or 'ready'
 class Package:
-    def __init__(self, id, address, city, state, zip_code, deadline, weight, status="ready", assigned_truck = None):
+    def __init__(self, id, address, city, state, zip_code, deadline, weight, status="ready", delivering_truck = None):
         self.id = id
         self.address = address
         self.city = city
@@ -10,8 +12,9 @@ class Package:
         self.zip_code = zip_code
         self.weight = weight
         self.status = status
-        self.assigned_truck = assigned_truck
+        self.delivering_truck = delivering_truck
         self.deadline = deadline
+        self.delivery_time = None
         self.destination_vertex = None
         
     def __lt__(self, other):
@@ -20,54 +23,65 @@ class Package:
         if other.deadline == 'EOD':
             return False
         return self.deadline < other.deadline
+    
+    def __str__(self):
+        message = "Package ID: {}, being delivered to {}, has a status of {}.".format(self.id, self.address, self.status)
+        if self.status == 'delivered':
+            message += " It was delivered by {} at {}".format(self.delivering_truck, self.delivery_time)
+        return message
 #Adds a package to priority list if the deadline is not 'EOD'. Priority list will
 #always be the first destinations in delivery unless there are no ready packages here
 class PackageList:
     def __init__(self):
         self.index = 0
-        self.non_priority_list = {}
-        self.priority_list = {}
-    
+        self.priority = HashMap(20)
+        self.non_priority = HashMap(20)
+#Adds the package to either the priority or non priority hash table depending on if
+#there is a delivery requirement that is not the end of day
+# runtime: O(n) due to possile resizing of hashmap  
     def add_package(self, order):
         if order.deadline != 'EOD':
-            self.priority_list[order.id] = order
+            self.priority.insert(order.id, order)
         else:
-            self.non_priority_list[order.id] = order
+            self.non_priority.insert(order.id, order)
             
-    def set_ready(self, ids = []):
-        if ids is None:
-            self.set_all_ready
-        else:
-            all_packages = self.all_packages
-            for id in ids:
-                all_packages[id][status] = 'ready'  
+#This is a useful function for setting all packages at a specific time ready
+#runtime: O(n + m) where n represents priority list length and m represents non priority list length                
     def set_all_ready(self):
-        all_orders = list(self.priority_list.values()) + list(self.non_priority_list.values())
-        for order in all_orders:
-            if order.status != 'delivered':
-                order.status = 'ready'
-            
+        all_buckets = self.priority.list + self.non_priority.list
+        for bucket in all_buckets:
+            for order in bucket:
+                if order[1].status != 'delivered':
+                    order[1].status = 'ready'
+#Useful for function for updating a single package with new address or new status
+#without needing to replace the entire instance
+#runtime: O(k) where k represents number of keyword arguments to loop over. Lookup used on both lists is O(1)           
     def edit_package(self, id, **kwargs):
-        all_packages = self.all_packages()
-        if id in all_packages:  
-            editing = all_packages[id]
-            for key, value in kwargs.items():
-                setattr(editing, key, value)
-        else:
+        success = self.priority.modify_item(id, **kwargs)
+        if not success:
+            success = self.non_priority.modify_item(id, **kwargs)
+        if not success:
             print(f"No package found with id {id}")
-    
-    def all_packages(self):
-        return {**self.priority_list, **self.non_priority_list}    
+#collects all ready packages from either the priority list or non priority list
+# runtime: O(n) where n represents number of items in either priority or non priority list        
+    def _list_ready(self, whichList):
+        result = []
+        for bucket in whichList.list: 
+            for package in bucket:  
+                if package[1].status == 'ready':  
+                    result.append(package[1])
+        return result 
             
     def list_ready_priorities(self):
-        priorities = [package for package in self.priority_list.values() if package.status == 'ready']
-        return priorities
+        return self._list_ready(self.priority)
+    
     def list_ready_non_priorities(self):
-        non_priorities = [package for package in self.non_priority_list.values() if package.status == 'ready']
-        return non_priorities 
+        return self._list_ready(self.non_priority)
+#function used for lookup by users to see status of a package
+#runtime: O(1)--locate function on both lists is O(1) and O(1 + 1) = O(1)    
+    def locate_package(self, id):
+        success = self.priority.locate(id)
+        if success is None:
+            success = self.non_priority.locate(id)  
+        return success
             
-    def list_ready_destinations(self):
-        all_packages = self.all_packages()
-        all_destinations = [package for package in all_packages.values() if package.status == 'ready']
-        return all_destinations
-        

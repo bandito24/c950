@@ -26,14 +26,15 @@ class Truck:
             for item in delivery:
                 print(f'Package ID: {item.id} was delivered to {item.destination_vertex.address_label} at {self.departure_time} by {self.name}')
                 item.status = 'delivered'
+                item.delivery_time = self.departure_time
+                item.delivering_truck = self.name 
                 self.packages_delivered += 1
         print(f'{self.packages_delivered} delivered total by {self.name}')
         time_to_return = round((return_distance / self.average_mph) * 60)
         self.total_miles += return_distance
         temp_datetime = datetime.combine(datetime.today(), self.departure_time) + timedelta(minutes=time_to_return)
-        
-        return_time = self.departure_time
-        return return_time
+        self.departure_time = temp_datetime.time()
+        return self.departure_time
 
         
     

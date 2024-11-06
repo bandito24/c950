@@ -19,7 +19,7 @@ class DeliveryGraph:
     def add_directed_edge(self, from_vertex, to_vertex, weight):
         self.edge_weights[(from_vertex, to_vertex)] = weight
         self.adjacency_list[from_vertex].append(to_vertex)
-    
+    #Adds all edges between locations for travel in either direction in map
     def add_undirected_edge(self, from_vertex, to_vertex, weight):
         self.add_directed_edge(from_vertex, to_vertex, weight)
         self.add_directed_edge(to_vertex, from_vertex, weight)
@@ -31,12 +31,17 @@ class DeliveryGraph:
         raise ValueError(f"Vertex with address label '{address_label}' not found.")
     
     # Main algorithm for deciding the best route based on package list passed in. Will not exceed 16 unless specified
+    # Runtime: O(n^2) where n represents the number of destinations or vertices visited.
+    # Each vertex checks potential edges to all other destinations in its adjacency list.
     def nearest_neighbor_route(self, start_vertex, package_list, k=16):
         Delivery = namedtuple('Delivery', ['package', 'distance', 'address'])
         visited = set()
         current_vertex = start_vertex
         assigned_packages = []
         assignments = {}
+        
+        #The code below is for assuring that a package destination is not revisted multiple times if more than
+        #one package exists for a given location
         for package in package_list:
             if package.destination_vertex in assignments:
                 assignments[package.destination_vertex].append(package)
@@ -44,6 +49,9 @@ class DeliveryGraph:
                 assignments[package.destination_vertex] = [package]
         all_destinations = list(assignments.keys())
         
+        #for every package location, the next closest location that has a package order is visited next
+        #This is a greedy algorithm that chooses the next step based on what is best in that moment
+        #The loop continues while there are more packages to deliver or the max amount of neighbors has been visited
         while current_vertex and k > len(assigned_packages):
             min_route = float('inf')
             next_vertex = None

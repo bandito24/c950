@@ -57,19 +57,28 @@ truck3 = Truck('truck3')
 
 delivery_hub = delivery_graph.vertex_dict['4001 South 700 East,']
 
-#Function for finding next appropriate delivery location based on
-#Priority and closest next location
+#Function for finding next appropriate delivery location based on priority and closest next location
+# Combined runtime: O(n^2 + m^2) where n represents the length of priority packages 
+# and m represents the length of non-priority packages. This is due to the nearest neighbor 
+# route's quadratic operations on both priority and non-priority lists.
 def generate_next_deliveries():
+    #the function below retrieves all values from the priority list (if any) to create first priority route
+    #runtime: O(n) where n represents all priority list items 
     priorities = orders.list_ready_priorities()
+    #O(n^2)
     first_deliveries = delivery_graph.nearest_neighbor_route(delivery_hub, priorities)
     if first_deliveries:
         last_endpoint = first_deliveries[-1].package[0].destination_vertex
     else:
         last_endpoint = delivery_hub
+    #runtime: O(m^2) 
     non_priorities = orders.list_ready_non_priorities()
     second_deliveries = delivery_graph.nearest_neighbor_route(last_endpoint, non_priorities)    
     deliveries = first_deliveries + second_deliveries
     
+    #The function component below guarantees a location is only visited once if there are 
+    # two packages for one location
+    #runtime: O(n) where n represents combined length of priority and non priority packages
     unique_locations = {}
     for delivery in deliveries:
         if delivery.address in unique_locations:
@@ -78,6 +87,8 @@ def generate_next_deliveries():
             unique_locations[delivery.address] = {'distance': delivery.distance, 'packages': delivery.package}
     deliveries = list(unique_locations.values())
     
+    #this function component ensures that a truck caries no more than 16 packages by calculating a last index
+    #runtime: O(1), it never loops more than the constant 16
     package_count = 0
     last_index = 0
     for index, grouping in enumerate(deliveries):
@@ -86,6 +97,7 @@ def generate_next_deliveries():
             last_index = index
         else:
             break
+    #The package listing is trimmed to only have 16 values and the return distance to central hub is calculated
     deliveries = deliveries[:last_index + 1]
     return_distance = delivery_graph.edge_weights[(deliveries[-1]['packages'][0].destination_vertex, delivery_hub)]
     deliveries.append(return_distance)
@@ -115,7 +127,19 @@ truck3.depart(truck1_return_time)
 
 print(f'Total drive distance: {round(truck1.total_miles + truck2.total_miles + truck3.total_miles)} miles')
     
+#User CLI tool for looking up status of package orders
+#runtime: O(1)    
+package_id = input("Enter an order id to check on status (or 'exit' to leave): ")
+while package_id != 'exit': 
+    try:
+        requested = orders.locate_package(int(package_id)) 
+        if requested is None:
+            print(f"There is no record of a package with ID: {package_id}")
+        else:
+            print(requested)  
+    except ValueError:
+        print(f"Invalid input: '{package_id}' is not a valid integer.") 
     
+    package_id = input("Enter an order id to check on status (or 'exit' to leave): ")
 
-    
 
