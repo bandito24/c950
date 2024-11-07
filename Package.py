@@ -14,7 +14,8 @@ class Package:
         self.status = status
         self.delivering_truck = delivering_truck
         self.deadline = deadline
-        self.delivery_time = None
+        #delivery_log will contain a tuple of truck departure time and package delivery time
+        self.delivery_log = None
         self.destination_vertex = None
         
     def __lt__(self, other):
@@ -27,8 +28,12 @@ class Package:
     def __str__(self):
         message = "Package ID: {}, being delivered to {}, has a status of {}.".format(self.id, self.address, self.status)
         if self.status == 'delivered':
-            message += " It was delivered by {} at {}".format(self.delivering_truck, self.delivery_time)
+            message += " It was delivered by {} at {}".format(self.delivering_truck, self.delivery_log[1])
         return message
+    
+    
+    
+    
 #Adds a package to priority list if the deadline is not 'EOD'. Priority list will
 #always be the first destinations in delivery unless there are no ready packages here
 class PackageList:
@@ -51,7 +56,7 @@ class PackageList:
         all_buckets = self.priority.list + self.non_priority.list
         for bucket in all_buckets:
             for order in bucket:
-                if order[1].status != 'delivered':
+                if order[1].status != 'delivered' and order[1].status != 'en route':
                     order[1].status = 'ready'
 #Useful for function for updating a single package with new address or new status
 #without needing to replace the entire instance
@@ -84,4 +89,19 @@ class PackageList:
         if success is None:
             success = self.non_priority.locate(id)  
         return success
-            
+    
+    def find_status_at_time(self, start_time, end_time):
+        found_packages = []
+        all_packages = self.priority.list + self.non_priority.list
+        for bucket in all_packages:
+            for item in bucket:
+                item = item[1]
+                message = ""
+                if item.delivery_log[0] >= start_time and item.delivery_log[0] <= end_time:
+                    message += "Package ID: {} has a status of 'en route' after being loaded into {} at {}. ".format(item.id, item.delivering_truck, item.delivery_log[0]) 
+                    message += "It will be delivered at {}".format(item.delivery_log[1])
+                if message:
+                    found_packages.append(message)
+        if not found_packages:
+            found_packages = ['No packages were loaded within this time frame']
+        return found_packages

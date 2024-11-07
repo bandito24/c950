@@ -95,6 +95,8 @@ def generate_next_deliveries():
         package_count += len(grouping['packages'])
         if package_count <= 16:
             last_index = index
+            for package in grouping['packages']:
+                package.status = 'en route'
         else:
             break
     #The package listing is trimmed to only have 16 values and the return distance to central hub is calculated
@@ -126,20 +128,51 @@ truck3.add_delivery_packages(third_deliveries)
 truck3.depart(truck1_return_time)
 
 print(f'Total drive distance: {round(truck1.total_miles + truck2.total_miles + truck3.total_miles)} miles')
+
+
+# print('hj')
+# beginning = time(int('8'), int('0'))
+# ending = time(int('9'), int('0'))
+# matches = orders.find_status_at_time(beginning, ending)
+# result = '\n'.join(matches)
+# print(result)
+
     
 #User CLI tool for looking up status of package orders
-#runtime: O(1)    
-package_id = input("Enter an order id to check on status (or 'exit' to leave): ")
-while package_id != 'exit': 
-    try:
-        requested = orders.locate_package(int(package_id)) 
-        if requested is None:
-            print(f"There is no record of a package with ID: {package_id}")
-        else:
-            print(requested)  
-    except ValueError:
-        print(f"Invalid input: '{package_id}' is not a valid integer.") 
-    
-    package_id = input("Enter an order id to check on status (or 'exit' to leave): ")
+#runtime: O(1) for single package lookup
+#runtime: O(n) for finding all packages loaded within a time frame    
+user_input = input("Enter 'check time frame' or 'check package id' (or 'exit' to leave): ")
+while user_input != 'exit': 
+    if user_input.lower() == 'check package id':
+        user_input = input("Enter the package ID (or 'exit' to leave): ")
+        try:
+            requested = orders.locate_package(int(user_input)) 
+            if requested is None:
+                print(f"There is no record of a package with ID: {user_input}")
+            else:
+                print(requested)  
+        except ValueError:
+            print(f"Invalid input: '{user_input}' is not a valid integer.") 
+    elif user_input.lower() == 'check time frame':
+       start_time = input("Enter the beginning of time frame (format hh:mm with 24-hour clock): ")
+       end_time = input("Enter the end of time frame (format hh:mm with 24-hour clock): ")
+       try:
+            start_list = start_time.split(':')
+            end_list = end_time.split(':')
+            beginning = time(int(start_list[0]), int(start_list[1]))
+            ending = time(int(end_list[0]), int(end_list[1]))
+            matches = orders.find_status_at_time(beginning, ending)
+            result = '\n'.join(matches)
+            print(result) 
+       except:
+            print(f"Invalid input: '{start_time}' and '{end_time} is not a valid time.")
+       
+           
+
+       
+        
+    else:
+        print('invalid user input. please try again')
+    user_input = input("Enter 'check time frame' or 'check package id' (or 'exit' to leave): ")
 
 
